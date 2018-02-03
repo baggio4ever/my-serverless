@@ -3,6 +3,20 @@ from datetime import datetime
 import boto3
 from boto3.dynamodb.conditions import Key,Attr
 
+'''
+クエリー文字列で渡す
+
+user_id=xxxx&year=yyyy&month=mm&date=dd な感じ
+
+{
+    user_id: xxxx,
+    year: yyyy,  optional
+    month: mm,   optional
+    date: dd     optional
+}
+
+注意：　パラメータは、0詰めで渡してください。month=5 はダメ。month=05　でお願いします。
+'''
 
 def get_log(event, context):
     if event["headers"] is not None:
@@ -20,10 +34,27 @@ def get_log(event, context):
         params = event["queryStringParameters"]
         user_id = params["user_id"]
         if user_id is not None:
-#            user_id = event["queryStringParameters"]["user_id"]
-            response = table.query(
-                KeyConditionExpression=Key('user_id').eq( user_id )&Key('created_at').begins_with('2018/01')
-            )
+            year = params.get("year")   # params["year"]って書くと、キーが存在しないときにKeyErrorになる
+            month = params.get("month")
+            date = params.get("date")
+
+            if year is not None:
+                dt = ""
+                if month is not None:
+                    if date is not None:
+                        dt = '{0}/{1}/{2}'.format(year,month,date)
+                    else:
+                        dt = '{0}/{1}'.format(year,month)
+                else:
+                    dt = '{0}'.format(year)
+                response = table.query(
+                    KeyConditionExpression=Key('user_id').eq( user_id )&Key('created_at').begins_with(dt)
+                )
+            else:
+                response = table.query(
+                    KeyConditionExpression=Key('user_id').eq( user_id )
+                )
+
             items = response['Items']
         else:
             items = ["a","b"]
