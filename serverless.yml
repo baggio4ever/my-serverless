@@ -127,6 +127,15 @@ functions:
           private: false # APIキーを使用する
           cors: true  # API GatewayにCORSの設定をする
 
+  logs:
+    handler: handler_getLog.get_log
+    events:
+      - http:
+          path: logs
+          method: get
+          private: false # APIキーを使用する
+          cors: true  # API GatewayにCORSの設定をする
+
 #    Define function environment variables here
 #    environment:
 #      variable2: value2
